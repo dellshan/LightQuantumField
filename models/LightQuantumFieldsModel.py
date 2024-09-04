@@ -15,7 +15,7 @@ import subprocess
 from pytorch3d.renderer import (
     RasterizationSettings, MeshRenderer, MeshRasterizer, SoftPhongShader
 )
-
+from utils.EvaluationMetrics import EvaluationMetrics
 # Add ACEZero to the Python path
 sys.path.append('/home/nicolas/LightQuantumField3D/acezero')
 from acezero import ace_zero
@@ -214,14 +214,14 @@ def train():
             running_loss += loss.item()
 
             # Evaluate the metrics
-            psnr = metrics.compute_psnr(outputs, ground_truth_images)
-            ssim = metrics.compute_ssim(outputs, ground_truth_images)
-            chamfer_dist = metrics.compute_chamfer_distance(pred_points, gt_points)
-            fps = metrics.compute_fps(render_scene)
-            lpips_score = metrics.compute_lpips(outputs, ground_truth_images)
-            normal_consistency = metrics.compute_normal_consistency(pred_normals, gt_normals)
+            # psnr = metrics.compute_psnr(outputs, ground_truth_images)
+            # ssim = metrics.compute_ssim(outputs, ground_truth_images)
+            # chamfer_dist = metrics.compute_chamfer_distance(pred_points, gt_points)
+            # fps = metrics.compute_fps(render_scene)
+            # lpips_score = metrics.compute_lpips(outputs, ground_truth_images)
+            # normal_consistency = metrics.compute_normal_consistency(pred_normals, gt_normals)
 
-            print(f"PSNR: {psnr}, SSIM: {ssim}, Chamfer: {chamfer_dist}, FPS: {fps}, LPIPS: {lpips_score}, Normal Consistency: {normal_consistency}")
+            # print(f"PSNR: {psnr}, SSIM: {ssim}, Chamfer: {chamfer_dist}, FPS: {fps}, LPIPS: {lpips_score}, Normal Consistency: {normal_consistency}")
 
             # Render the scene for visual feedback (real-time OpenGL rendering)
             render_scene()
