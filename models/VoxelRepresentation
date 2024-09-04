@@ -1,0 +1,19 @@
+
+import torch
+import torch.nn as nn
+import pytorch3d
+from pytorch3d.structures import Meshes
+
+class VoxelRepresentation(nn.Module):
+    def __init__(self):
+        super(VoxelRepresentation, self).__init__()
+        self.conv3d_1 = nn.Conv3d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding=1)
+        self.conv3d_2 = nn.Conv3d(32, 64, kernel_size=3, stride=1, padding=1)
+        self.relu = nn.ReLU()
+
+    def forward(self, voxel_grid):
+        x = self.conv3d_1(voxel_grid)
+        x = self.relu(x)
+        x = self.conv3d_2(x)
+        x = self.relu(x)
+        return x

@@ -1,0 +1,56 @@
+import torch
+from torch.utils.data import Dataset
+from PIL import Image
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+
+class BicycleDataset(Dataset):
+    def __init__(self, root_dir):
+        self.root_dir = root_dir
+        self.image_dir = os.path.join(root_dir, "images")
+        self.images = sorted(os.listdir(self.image_dir))
+        self.poses_bounds = np.load(os.path.join(root_dir, "poses_bounds.npy"))
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        img_name = os.path.join(self.image_dir, self.images[idx])
+        image = Image.open(img_name).convert('RGB')
+        image = torch.from_numpy(np.array(image)).permute(2, 0, 1).float() / 255.0
+        
+        pose = self.poses_bounds[idx, :12].reshape(3, 4)  # Example for loading pose
+        bounds = self.poses_bounds[idx, 12:]  # Example for loading bounds
+
+        return image, pose, bounds
+
+# Example of creating a dataset and dataloader
+dataset = BicycleDataset(root_dir='/mnt/c/Users/dells/Downloads/360_v2/bicycle')
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=True)
+
+
+def test_dataloader(dataloader):
+    # Iterate through the DataLoader
+    for i, (images, poses, bounds) in enumerate(dataloader):
+        print(f"Batch {i+1}")
+        print(f"Image batch shape: {images.shape}")
+        print(f"Pose batch shape: {poses.shape}")
+        print(f"Bounds batch shape: {bounds.shape}")
+        
+        # Display the first image in the batch
+        img = images[0].permute(1, 2, 0).numpy()  # Convert from (C, H, W) to (H, W, C) and to numpy array
+        plt.imshow(img)
+        plt.title(f"Pose: {poses[0].numpy()}\nBounds: {bounds[0].numpy()}")
+        plt.show()
+        
+        # Break after displaying one batch to avoid showing too many images
+        break
+
+if __name__ == "__main__":
+    # Example of creating a dataset and dataloader
+    dataset = BicycleDataset(root_dir='/mnt/c/Users/dells/Downloads/360_v2/bicycle')
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=True)
+
+    # Test the dataloader
+    test_dataloader(dataloader)

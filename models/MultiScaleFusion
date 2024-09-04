@@ -1,0 +1,20 @@
+import torch
+import torch.nn as nn
+import pytorch3d
+from pytorch3d.structures import Meshes
+
+from swin_transformer_v2 import SwinTransformerV2  # Assuming an existing module
+from torchvision.models import resnet50
+
+class MultiScaleFusion(nn.Module):
+    def __init__(self):
+        super(MultiScaleFusion, self).__init__()
+        self.swin_transformer = SwinTransformerV2()
+        self.resnet_fpn = resnet50(pretrained=True)
+
+    def forward(self, input_data):
+        # Extract features using Swin Transformer
+        swin_features = self.swin_transformer(input_data)
+        # Extract and fuse multi-scale features using ResNet-FPN
+        fpn_features = self.resnet_fpn(swin_features)
+        return fpn_features
