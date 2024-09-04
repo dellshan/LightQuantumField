@@ -176,20 +176,21 @@ def train():
     model = LightQuantumFieldsModel()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     loss_functions = CustomLosses()
-    
+    metrics = EvaluationMetrics()  # Instantiate evaluation metrics
+
     os.makedirs('models', exist_ok=True)
     
     # Load checkpoint
     checkpoint_path = "models/checkpoint.pth.tar"
     model, optimizer, start_epoch, best_loss = load_checkpoint(checkpoint_path, model, optimizer)
-    
+
     dataset = BicycleDataset(root_dir='/mnt/c/Users/dells/Downloads/360_v2/bicycle')
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=True, num_workers=4)
-    
+
     pygame.init()
     display = (800, 600)
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
-    
+
     num_epochs = 10
     results_folder = "results/ace_zero_output"
     rgb_files = "/path/to/rgb/files/*.jpg"
@@ -197,35 +198,39 @@ def train():
     for epoch in range(start_epoch, num_epochs):
         run_ace_zero(rgb_files, results_folder)
         predicted_poses = load_poses(results_folder)
-        
+
         model.train()
         running_loss = 0.0
+
         for i, (images, _, bounds) in enumerate(dataloader):
             optimizer.zero_grad()
-
-            # Forward pass: get the model output (color and density)
             outputs, densities = model(images, predicted_poses)
             
-            # Compute the hybrid loss between the output and ground-truth
+            # Compute loss
             loss = loss_functions.hybrid_loss(outputs, predicted_poses, bounds)
             loss.backward()
-
-            # Perform optimization step
             optimizer.step()
 
             running_loss += loss.item()
 
+            # Evaluate the metrics
+            psnr = metrics.compute_psnr(outputs, ground_truth_images)
+            ssim = metrics.compute_ssim(outputs, ground_truth_images)
+            chamfer_dist = metrics.compute_chamfer_distance(pred_points, gt_points)
+            fps = metrics.compute_fps(render_scene)
+            lpips_score = metrics.compute_lpips(outputs, ground_truth_images)
+            normal_consistency = metrics.compute_normal_consistency(pred_normals, gt_normals)
+
+            print(f"PSNR: {psnr}, SSIM: {ssim}, Chamfer: {chamfer_dist}, FPS: {fps}, LPIPS: {lpips_score}, Normal Consistency: {normal_consistency}")
+
             # Render the scene for visual feedback (real-time OpenGL rendering)
             render_scene()
 
-        # Calculate the average loss for the epoch
         epoch_loss = running_loss / len(dataloader)
-
-        # Check if this is the best model (minimum loss)
         is_best = epoch_loss < best_loss
         best_loss = min(epoch_loss, best_loss)
 
-        # Save the model checkpoint after each epoch
+        # Save the checkpoint
         checkpoint_state = {
             'epoch': epoch + 1,
             'state_dict': model.state_dict(),
@@ -235,10 +240,7 @@ def train():
         save_checkpoint(checkpoint_state, is_best, filename=f"models/checkpoint_epoch_{epoch + 1}.pth.tar")
 
     pygame.quit()
-
-    # Save the final trained model
     torch.save(model.state_dict(), 'models/light_quantum_fields_model_bicycle_final.pth')
 
 if __name__ == "__main__":
     train()
-

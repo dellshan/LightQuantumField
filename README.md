@@ -7,5 +7,7 @@ sudo apt-get install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr-dev libx1
 
 pip uninstall open3d
 pip install open3d
+pip install torchmetrics
+pip install lpips
 
 
